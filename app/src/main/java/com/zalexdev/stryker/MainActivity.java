@@ -822,16 +822,18 @@ public class MainActivity extends AppCompatActivity {
         public void changeFragment(int itemId, int enterAnim, int exitAnim) {
             if (rootlessEngine && settings != null) {
                 DrawerSpec spec = DRAWER_SPECS.get(itemId);
-                String name = spec == null ? getString(R.string.this_tool) : getString(spec.titleRes);
+                String name = spec == null
+                            ? settings.getContext().getString(R.string.this_tool)
+                            : settings.getContext().getString(spec.titleRes);
                 if (ROOT_ONLY_IDS.contains(itemId)) {
                     android.widget.Toast.makeText(settings.getContext(),
-                            getString(R.string.needs_root_hardware, name),
+                            settings.getContext().getString(R.string.needs_root_hardware, name),
                             android.widget.Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (!vmReady && !VM_INDEPENDENT_IDS.contains(itemId)) {
                     android.widget.Toast.makeText(settings.getContext(),
-                            getString(R.string.needs_vm, name),
+                            settings.getContext().getString(R.string.needs_vm, name),
                             android.widget.Toast.LENGTH_SHORT).show();
                     return;
                 }
