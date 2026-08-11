@@ -28,7 +28,7 @@ DICT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zh_dict.py
 
 
 def load_dict(path):
-    """加载翻译词典模块并返回 TRANSLATIONS dict。"""
+    """加载翻译词典模块并返回 (TRANSLATIONS dict, SKIP set)。"""
     ns = {}
     with open(path, "r", encoding="utf-8") as f:
         code = f.read()
@@ -36,10 +36,11 @@ def load_dict(path):
     translations = ns.get("TRANSLATIONS", {})
     if not isinstance(translations, dict):
         raise SystemExit(f"[!] {path} 中未找到 TRANSLATIONS 字典")
-    return translations
+    skip = ns.get("SKIP", set())
+    return translations, skip
 
 
-def translate_file(src_path, out_path, translations, strict):
+def translate_file(src_path, out_path, translations, skip, strict):
     """翻译单个 strings XML 文件。返回 (translated, fallback) 计数。"""
     tree = ET.parse(src_path)
     root = tree.getroot()
@@ -51,7 +52,7 @@ def translate_file(src_path, out_path, translations, strict):
 
     for child in root:
         if child.tag != "string":
-            # 非 <string> 元素（如注释、plurals）原样序列化
+            # 非 <string> 元素（如注释、plurals、string-array）原样序列化
             lines.append(ET.tostring(child, encoding="unicode"))
             continue
 
@@ -59,8 +60,8 @@ def translate_file(src_path, out_path, translations, strict):
         text = child.text or ""
         attrs = dict(child.attrib)
 
-        if attrs.get("translatable", "").lower() == "false":
-            # 品牌名 / URL 等不可翻译条目，原样保留
+        if attrs.get("translatable", "").lower() == "false" or name in skip:
+            # 品牌名 / URL / 法律文本等条目，原样保留
             lines.append(serialize_string(name, text, attrs))
             continue
 
@@ -94,29 +95,41 @@ def serialize_string(name, text, attrs):
 
 def main():
     ap = argparse.ArgumentParser(description="StrykerOSS 汉化资源生成器")
-    ap.add_argument("--src", default="app/src/main/res/values", help="英文默认资源目录")
-    ap.add_argument("--out", default="app/src/main/res/values-zh-rCN", help="输出简体中文资源目录")
-    ap.add_argument("--dict", default=DICT_PATH, help="翻译词典 .py 路径")
+    ap.add_argument("--src", action="append", required=True,
+                    help="英文默认资源目录（可多次传入，处理多模块）")
+    ap.add_argument("--out", action="append", required=True,
+                    help="输出简体中文资源目录（与 --src 一一对应）")
+    ap.add_argument("--dict", action="append", default=None,
+                    help="翻译词典 .py 路径（与 --src 一一对应，缺省用默认词典）")
     ap.add_argument("--strict", action="store_true", help="词典缺失条目时报错退出")
     args = ap.parse_args()
 
-    translations = load_dict(args.dict)
-    print(f"[*] 词典加载完成: {len(translations)} 条")
+    if args.dict is None:
+        args.dict = [DICT_PATH]
+    if len(args.src) != len(args.out):
+        raise SystemExit("[!] --src 与 --out 数量必须一致")
+    if len(args.dict) == 1 and len(args.src) > 1:
+        args.dict = args.dict * len(args.src)
+    if len(args.dict) != len(args.src):
+        raise SystemExit("[!] --dict 数量必须与 --src 一致（或只传一个用于所有模块）")
 
     total_t = total_f = 0
-    for fname in sorted(os.listdir(args.src)):
-        if not (fname.startswith("strings") and fname.endswith(".xml")):
-            continue
-        src_path = os.path.join(args.src, fname)
-        out_path = os.path.join(args.out, fname)
-        t, f = translate_file(src_path, out_path, translations, args.strict)
-        total_t += t
-        total_f += f
-        print(f"[*] {fname}: 翻译 {t} 条, 回退 {f} 条")
+    for src_dir, out_dir, dict_path in zip(args.src, args.out, args.dict):
+        translations, skip = load_dict(dict_path)
+        print(f"[*] 词典加载完成: {len(translations)} 条, 跳过 {len(skip)} 条  -> {src_dir}")
+        for fname in sorted(os.listdir(src_dir)):
+            if not (fname.startswith("strings") and fname.endswith(".xml")):
+                continue
+            src_path = os.path.join(src_dir, fname)
+            out_path = os.path.join(out_dir, fname)
+            t, f = translate_file(src_path, out_path, translations, skip, args.strict)
+            total_t += t
+            total_f += f
+            print(f"[*] {src_dir}/{fname}: 翻译 {t} 条, 回退 {f} 条")
 
-    print(f"[*] 完成: 共翻译 {total_t} 条, 回退 {total_f} 条 -> {args.out}")
+    print(f"[*] 完成: 共翻译 {total_t} 条, 回退 {total_f} 条")
     if total_f:
-        print(f"[!] 有 {total_f} 条未翻译（保留英文）。可补充 scripts/zh_dict.py 后重跑。")
+        print(f"[!] 有 {total_f} 条未翻译（保留英文）。可补充 {args.dict} 后重跑。")
 
 
 if __name__ == "__main__":
