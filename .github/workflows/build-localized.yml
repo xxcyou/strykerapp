@@ -54,14 +54,15 @@ jobs:
             "ndk;25.1.8937393" \
             "cmake;3.22.1"
 
-      - name: Generate Simplified-Chinese resources (values-zh-rCN)
+      - name: Generate Simplified-Chinese resources (all modules)
         run: |
           python3 scripts/localize_zh.py \
-            --src app/src/main/res/values \
-            --out app/src/main/res/values-zh-rCN \
-            --dict scripts/zh_dict.py --strict
+            --src app/src/main/res/values --out app/src/main/res/values-zh-rCN --dict scripts/zh_dict.py --strict \
+            --src terminal/src/main/res/values --out terminal/src/main/res/values-zh-rCN --dict scripts/zh_dict_terminal.py --strict \
+            --src Xorg/src/main/res/values --out Xorg/src/main/res/values-zh-rCN --dict scripts/zh_dict_xorg.py --strict \
+            --src NeoTermBridge/src/main/res/values --out NeoTermBridge/src/main/res/values-zh-rCN --dict scripts/zh_dict_neotermbridge.py --strict
           echo "--- generated files ---"
-          ls -la app/src/main/res/values-zh-rCN/
+          find . -path "*/values-zh-rCN/*" -name "strings*.xml" | sort
 
       - name: Decode signing keystore (if secrets provided)
         id: signing
