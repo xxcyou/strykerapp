@@ -75,7 +75,7 @@ public class WiFiHistoryFragment extends Fragment {
                 e.printStackTrace();
                 if (e.getMessage().contains("EPERM")) {
                     new MaterialAlertDialogBuilder(context)
-                            .setTitle("Permission denied")
+                            .setTitle(R.string.title_permission_denied)
                             .setMessage("Failed to write file, use write as root?")
                             .setPositiveButton(android.R.string.yes, (di, i) -> {
                                 String[] lines = builder.toString().split("\n");
