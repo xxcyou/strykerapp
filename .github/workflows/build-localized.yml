@@ -113,7 +113,16 @@ jobs:
       - name: Collect and rename APK
         id: apk
         run: |
-          SRC=app/build/outputs/apk/release/app-release.apk
+          echo "--- apk outputs ---"
+          find app/build/outputs -name "*.apk" -exec ls -la {} \;
+          SRC=$(find app/build/outputs -name "*.apk" ! -name "*unsigned*" | head -1)
+          if [ -z "$SRC" ]; then
+            SRC=$(find app/build/outputs -name "*.apk" | head -1)
+          fi
+          if [ -z "$SRC" ]; then
+            echo "::error::No APK found under app/build/outputs"
+            exit 1
+          fi
           SUFFIX=signed
           VERSION=$(grep -oP "versionName\s+\"\K[^\"]+" app/build.gradle || echo "6.0")
           OUT="StrykerOSS-${VERSION}-zh-rCN-${SUFFIX}.apk"
