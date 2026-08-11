@@ -85,7 +85,7 @@ public class MACChangerInline extends AppCompatActivity {
                                             message.setText(Html.fromHtml("Failed to change the MAC address on your device. The Android version of your device is greater than 11, in which case you need to use XPosed (or <a href=\"https://github.com/LSPosed/LSPosed#install\">LSPosed</a>) and the <a href=\"https://github.com/DavidBerdik/MACsposed\">MACsposed</a> module. More details <a href=\"https://github.com/DavidBerdik/MACsposed\">here</a>.", Html.FROM_HTML_MODE_LEGACY));
                                             message.setMovementMethod(new LinkMovementMethod());
                                             new MaterialAlertDialogBuilder(context)
-                                                    .setTitle("Failed to change MAC address.")
+                                                    .setTitle(R.string.title_mac_change_failed)
                                                     .setView(view)
                                                     .setPositiveButton(android.R.string.ok, (di, i) -> {
                                                     })
