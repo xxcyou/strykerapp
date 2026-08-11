@@ -1341,4 +1341,51 @@ Storage is only consumed as the guest writes, and space freed inside the VM is r
     <string name="vm_stat_cpu">CPU load</string>
     <string name="vm_stat_ram">Memory</string>
     <string name="vm_stat_placeholder">—</string>
+
+    <!-- Drawer navigation (localized in scripts/zh_dict.py) -->
+    <string name="menu_dashboard">Dashboard</string>
+    <string name="menu_terminal">Terminal</string>
+    <string name="menu_logs">Logs</string>
+    <string name="menu_wifi">WiFi networks</string>
+    <string name="menu_handshakes">Handshakes</string>
+    <string name="menu_mac_changer">MAC changer</string>
+    <string name="menu_wpair">WhisperPair (BLE)</string>
+    <string name="menu_local_network">Local network</string>
+    <string name="menu_nmap">Nmap</string>
+    <string name="menu_web_scanner">Web scanner</string>
+    <string name="menu_arsenal">Arsenal</string>
+    <string name="menu_hid">HID Attacks</string>
+    <string name="menu_metasploit">Metasploit</string>
+    <string name="menu_geomac">GeoMac</string>
+    <string name="menu_vnc">VNC desktop</string>
+    <string name="menu_usb_arsenal">USB Arsenal</string>
+    <string name="menu_core_manager">Core manager</string>
+    <string name="menu_about">About</string>
+    <string name="needs_root_hardware">%1$s needs root hardware — unavailable on the rootless VM</string>
+    <string name="needs_vm">%1$s needs the VM — start it from the dashboard first</string>
+    <string name="this_tool">This tool</string>
+    <string name="drawer_section_essentials">Essentials</string>
+    <string name="drawer_section_wireless">Wireless</string>
+    <string name="drawer_section_network">Network</string>
+    <string name="drawer_section_offensive">Offensive</string>
+    <string name="drawer_section_tools">Tools</string>
+    <string name="drawer_chroot_mounted">Chroot mounted</string>
+    <string name="drawer_chroot_unmounted">Chroot unmounted</string>
+
+    <!-- Hard-coded dialog titles localized in scripts/zh_dict.py -->
+    <string name="title_news">News</string>
+    <string name="title_confirmation">Confirmation</string>
+    <string name="title_permission_denied">Permission denied</string>
+    <string name="title_geomac">GeoMac</string>
+    <string name="title_select_exploit">Select Exploit</string>
+    <string name="title_mac_change_failed">Failed to change MAC address.</string>
+    <string name="title_vnc_installer">VNC installer</string>
+    <string name="title_uninstall_vnc">Uninstall VNC?</string>
+    <string name="title_pmkid_capture">PMKID Capture</string>
+    <string name="title_wps_locked">WPS Locked</string>
+    <string name="title_additional_info">Additional info</string>
+    <string name="title_select_pin">Select pin</string>
+    <string name="title_delete_recording">Delete recording?</string>
+    <string name="drawer_rootless_note">Need the phone's own radio/USB gadget — unavailable on the rootless VM</string>
+    <string name="drawer_footer">Open-source · authorized testing only</string>
 </resources>
