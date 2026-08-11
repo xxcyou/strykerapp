@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+localize_zh.py — StrykerOSS 汉化资源生成器
+
+从英文默认资源 (res/values) 读取 strings*.xml，依据 scripts/zh_dict.py 中的
+翻译词典生成简体中文资源目录 res/values-zh-rCN/。
+
+特性:
+  * 只翻译 <string> 条目，保留 formatted / translatable 属性
+  * translatable="false" 的条目原样保留（品牌名、URL 等）
+  * 词典未覆盖的 key 回退为英文原文并打印警告（--strict 时直接失败）
+  * 原文中的占位符 (%1$s, %d, %s, \n 等) 由词典负责保留；本脚本不擅自改动值
+
+用法:
+  python3 scripts/localize_zh.py \
+      --src app/src/main/res/values \
+      --out app/src/main/res/values-zh-rCN \
+      [--dict scripts/zh_dict.py] [--strict]
+"""
+import argparse
+import os
+import sys
+import xml.etree.ElementTree as ET
+from xml.sax.saxutils import escape
+
+DICT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zh_dict.py")
+
+
+def load_dict(path):
+    """加载翻译词典模块并返回 TRANSLATIONS dict。"""
+    ns = {}
+    with open(path, "r", encoding="utf-8") as f:
+        code = f.read()
+    exec(compile(code, path, "exec"), ns)
+    translations = ns.get("TRANSLATIONS", {})
+    if not isinstance(translations, dict):
+        raise SystemExit(f"[!] {path} 中未找到 TRANSLATIONS 字典")
+    return translations
+
+
+def translate_file(src_path, out_path, translations, strict):
+    """翻译单个 strings XML 文件。返回 (translated, fallback) 计数。"""
+    tree = ET.parse(src_path)
+    root = tree.getroot()
+    if root.tag != "resources":
+        raise SystemExit(f"[!] 不是 resources 根节点: {src_path}")
+
+    lines = ['<?xml version="1.0" encoding="utf-8"?>', "<resources>"]
+    translated = fallback = 0
+
+    for child in root:
+        if child.tag != "string":
+            # 非 <string> 元素（如注释、plurals）原样序列化
+            lines.append(ET.tostring(child, encoding="unicode"))
+            continue
+
+        name = child.get("name", "")
+        text = child.text or ""
+        attrs = dict(child.attrib)
+
+        if attrs.get("translatable", "").lower() == "false":
+            # 品牌名 / URL 等不可翻译条目，原样保留
+            lines.append(serialize_string(name, text, attrs))
+            continue
+
+        if name in translations:
+            new_text = translations[name]
+            translated += 1
+        else:
+            new_text = text
+            fallback += 1
+            print(f"[warn] 未翻译: {name} -> 保留原文: {text[:60]!r}")
+            if strict:
+                raise SystemExit(f"[!] strict 模式: 缺少翻译 {name}")
+
+        lines.append(serialize_string(name, new_text, attrs))
+
+    lines.append("</resources>")
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    return translated, fallback
+
+
+def serialize_string(name, text, attrs):
+    """序列化单个 <string> 元素，保留原属性。"""
+    attr_str = "".join(f' {k}="{escape(v)}"' for k, v in attrs.items())
+    # 值只转义 XML 必需字符（& < >）；引号按原文保留，兼容 aapt 的引号包裹语法
+    body = escape(text)
+    return f"    <string{attr_str}>{body}</string>"
+
+
+def main():
+    ap = argparse.ArgumentParser(description="StrykerOSS 汉化资源生成器")
+    ap.add_argument("--src", default="app/src/main/res/values", help="英文默认资源目录")
+    ap.add_argument("--out", default="app/src/main/res/values-zh-rCN", help="输出简体中文资源目录")
+    ap.add_argument("--dict", default=DICT_PATH, help="翻译词典 .py 路径")
+    ap.add_argument("--strict", action="store_true", help="词典缺失条目时报错退出")
+    args = ap.parse_args()
+
+    translations = load_dict(args.dict)
+    print(f"[*] 词典加载完成: {len(translations)} 条")
+
+    total_t = total_f = 0
+    for fname in sorted(os.listdir(args.src)):
+        if not (fname.startswith("strings") and fname.endswith(".xml")):
+            continue
+        src_path = os.path.join(args.src, fname)
+        out_path = os.path.join(args.out, fname)
+        t, f = translate_file(src_path, out_path, translations, args.strict)
+        total_t += t
+        total_f += f
+        print(f"[*] {fname}: 翻译 {t} 条, 回退 {f} 条")
+
+    print(f"[*] 完成: 共翻译 {total_t} 条, 回退 {total_f} 条 -> {args.out}")
+    if total_f:
+        print(f"[!] 有 {total_f} 条未翻译（保留英文）。可补充 scripts/zh_dict.py 后重跑。")
+
+
+if __name__ == "__main__":
+    main()
