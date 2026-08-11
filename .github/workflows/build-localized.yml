@@ -4,19 +4,19 @@
 # 功能:
 #   1. 生成简体中文资源 (scripts/localize_zh.py + scripts/zh_dict.py)
 #   2. JDK 17 + Gradle 编译 release APK（R8 压缩/混淆，ndk-build 原生库）
-#   3. 若配置了签名 Secrets 则自动签名，否则产出未签名 APK
+#   3. 自动签名：配置了签名 Secrets 用固定密钥，否则用 JDK17 keytool 生成临时密钥
 #   4. 上传 APK 为 Artifact；打 tag 时自动发布到 GitHub Release
 #
 # 触发方式:
 #   * 手动: Actions -> "Build localized StrykerOSS" -> Run workflow
 #   * 推送 tag (v*): 自动构建并发布 Release
 #
-# 需要配置的 Secrets（Settings -> Secrets and variables -> Actions）:
+# 可选 Secrets（Settings -> Secrets and variables -> Actions）:
 #   STRYKER_KEYSTORE_B64      base64 编码的 keystore 文件内容（gen_keystore.sh 生成）
 #   STRYKER_KEYSTORE_PASSWORD keystore 密码
 #   STRYKER_KEY_ALIAS         密钥别名
 #   STRYKER_KEY_PASSWORD      密钥密码
-#   未配置时产物为未签名 APK（安装前需自行签名）。
+#   未配置时自动生成临时密钥签名（APK 可安装，但无法覆盖升级，密钥每次构建不同）。
 # ============================================================================
 name: Build localized StrykerOSS (JDK 17)
 
@@ -76,17 +76,32 @@ jobs:
             echo "Keystore decoded: $(ls -la "$RUNNER_TEMP/stryker-release.jks" | awk '{print $5}') bytes"
           else
             echo "keystore_decoded=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::STRYKER_KEYSTORE_B64 not set — building UNSIGNED APK"
+            echo "::warning::STRYKER_KEYSTORE_B64 not set — generating a TEMPORARY keystore with JDK17 keytool"
           fi
 
+      - name: Generate temporary signing keystore (JDK 17 keytool)
+        if: steps.signing.outputs.keystore_decoded != 'true'
+        run: |
+          PASS="$(openssl rand -hex 12)"
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/stryker-release.jks" \
+            -alias stryker-release \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$PASS" -keypass "$PASS" \
+            -dname "CN=StrykerOSS Localized Build, OU=CI, O=StrykerOSS, C=CN"
+          echo "keystore_file=$RUNNER_TEMP/stryker-release.jks" >> "$GITHUB_OUTPUT"
+          echo "storepass=$PASS" >> "$GITHUB_OUTPUT"
+          echo "keyalias=stryker-release" >> "$GITHUB_OUTPUT"
+          echo "keypass=$PASS" >> "$GITHUB_OUTPUT"
+          echo "::warning::签名密钥为本次构建临时生成，无法用于覆盖安装升级。如需固定签名，请配置 STRYKER_KEYSTORE_B64 等 Secrets（见 README-zh-build.md）。"
+
       - name: Export signing properties
-        if: steps.signing.outputs.keystore_decoded == 'true'
         run: |
           {
             echo "STRYKER_RELEASE_STORE_FILE=${{ steps.signing.outputs.keystore_file }}"
-            echo "STRYKER_RELEASE_STORE_PASSWORD=${{ secrets.STRYKER_KEYSTORE_PASSWORD }}"
-            echo "STRYKER_RELEASE_KEY_ALIAS=${{ secrets.STRYKER_KEY_ALIAS }}"
-            echo "STRYKER_RELEASE_KEY_PASSWORD=${{ secrets.STRYKER_KEY_PASSWORD }}"
+            echo "STRYKER_RELEASE_STORE_PASSWORD=${{ steps.signing.outputs.storepass || secrets.STRYKER_KEYSTORE_PASSWORD }}"
+            echo "STRYKER_RELEASE_KEY_ALIAS=${{ steps.signing.outputs.keyalias || secrets.STRYKER_KEY_ALIAS }}"
+            echo "STRYKER_RELEASE_KEY_PASSWORD=${{ steps.signing.outputs.keypass || secrets.STRYKER_KEY_PASSWORD }}"
           } >> "$GITHUB_ENV"
 
       - name: Grant execute permission for gradlew
@@ -99,11 +114,7 @@ jobs:
         id: apk
         run: |
           SRC=app/build/outputs/apk/release/app-release.apk
-          if [ "${{ steps.signing.outputs.keystore_decoded }}" = "true" ]; then
-            SUFFIX=signed
-          else
-            SUFFIX=unsigned
-          fi
+          SUFFIX=signed
           VERSION=$(grep -oP "versionName\s+\"\K[^\"]+" app/build.gradle || echo "6.0")
           OUT="StrykerOSS-${VERSION}-zh-rCN-${SUFFIX}.apk"
           cp "$SRC" "$OUT"
@@ -111,8 +122,7 @@ jobs:
           echo "APK: $OUT ($(du -h "$OUT" | cut -f1))"
           sha256sum "$OUT" | tee "$OUT.sha256"
 
-      - name: Verify APK signature (when signed)
-        if: steps.signing.outputs.keystore_decoded == 'true'
+      - name: Verify APK signature
         run: |
           APKSIGNER="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/build-tools/34.0.0/apksigner"
           "$APKSIGNER" verify --print-certs "${{ steps.apk.outputs.apk_path }}"
