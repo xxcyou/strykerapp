@@ -92,7 +92,7 @@ public class StoredAdapter extends RecyclerView.Adapter<StoredAdapter.ViewHolder
 
     private void removeNetwork(int position) {
         MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(context)
-                .setTitle("Confirmation")
+                .setTitle(R.string.title_confirmation)
                 .setMessage("Are you sure to delete this saved network?")
                 .setPositiveButton(context.getResources().getString(R.string.yes), (di, i) -> {
                     core.removeSavedNetwork(stored.get(position).get(3));
