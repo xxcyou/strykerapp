@@ -157,7 +157,7 @@ public class WpairRecordingsFragment extends Fragment {
 
     private void confirmDelete(File file) {
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete recording?")
+                .setTitle(R.string.title_delete_recording)
                 .setMessage(file.getName())
                 .setPositiveButton("Delete", (d, w) -> {
                     if (file.delete()) {
