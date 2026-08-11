@@ -1386,6 +1386,6 @@ Storage is only consumed as the guest writes, and space freed inside the VM is r
     <string name="title_additional_info">Additional info</string>
     <string name="title_select_pin">Select pin</string>
     <string name="title_delete_recording">Delete recording?</string>
-    <string name="drawer_rootless_note">Need the phone's own radio/USB gadget — unavailable on the rootless VM</string>
+    <string name="drawer_rootless_note">Need the phone\'s own radio/USB gadget — unavailable on the rootless VM</string>
     <string name="drawer_footer">Open-source · authorized testing only</string>
 </resources>
