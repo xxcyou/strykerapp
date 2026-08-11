@@ -247,7 +247,7 @@ public class WiFIAdapter extends RecyclerView.Adapter<WiFIAdapter.ViewHolder> {
 
         pmkid_capture.setOnClickListener(view -> {
             new MaterialAlertDialogBuilder(context)
-                    .setTitle("PMKID Capture")
+                    .setTitle(R.string.title_pmkid_capture)
                     .setMessage("Pmkid capture are included into HS Capture attack. Please use HS Capture instead of PMKID Capture.")
                     .setPositiveButton(android.R.string.ok, (dialog1, which) -> {
                         dialog1.dismiss();
@@ -268,7 +268,7 @@ public class WiFIAdapter extends RecyclerView.Adapter<WiFIAdapter.ViewHolder> {
 
         wps_lock.setOnClickListener(view -> {
             MaterialAlertDialogBuilder d = new MaterialAlertDialogBuilder(context)
-                    .setTitle("WPS Locked")
+                    .setTitle(R.string.title_wps_locked)
                     .setMessage("Stryker detected that this network is WPS Locked. This means that you can't use WPS to connect to this network. You can still try wps attacks, but they will fail.")
                     .setPositiveButton(android.R.string.ok, (dialog1, which) -> dialog1.dismiss());
             d.show();
@@ -291,7 +291,7 @@ public class WiFIAdapter extends RecyclerView.Adapter<WiFIAdapter.ViewHolder> {
                 info1.append(s.trim().replace("*","    -")).append("\n");
             }
             MaterialAlertDialogBuilder d = new MaterialAlertDialogBuilder(context)
-                    .setTitle("Additional info")
+                    .setTitle(R.string.title_additional_info)
                     .setMessage(info1)
                     .setPositiveButton(android.R.string.ok, (dialog1, which) -> dialog1.dismiss());
             if(network.getOK()){
@@ -1122,7 +1122,7 @@ public class WiFIAdapter extends RecyclerView.Adapter<WiFIAdapter.ViewHolder> {
                     pins_list[0] = "Test all";
                     AtomicBoolean selected = new AtomicBoolean(false);
                     new MaterialAlertDialogBuilder(app)
-                            .setTitle("Select pin")
+                            .setTitle(R.string.title_select_pin)
                             .setItems(pins_list, (dialogInterface, i) -> {
                                 core.wpsDisableWifiIfEnabled();
                                 selected.set(true);
