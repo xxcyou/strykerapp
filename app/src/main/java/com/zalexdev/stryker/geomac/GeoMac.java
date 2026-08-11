@@ -116,7 +116,7 @@ public class GeoMac extends Fragment {
         restoreFilterState(view);
         refreshOverlay();
 
-        receiver.setTitle(R.string.title_geomac);
+        receiver.setTitle(getString(R.string.title_geomac));
     }
 
     @Override
