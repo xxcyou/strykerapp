@@ -20,6 +20,7 @@ localize_zh.py — StrykerOSS 汉化资源生成器
 """
 import argparse
 import os
+import re
 import sys
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
@@ -86,10 +87,14 @@ def translate_file(src_path, out_path, translations, skip, strict):
 
 
 def serialize_string(name, text, attrs):
-    """序列化单个 <string> 元素，保留原属性。"""
+    """序列化单个 <string> 元素，保留原属性，并做 Android 资源转义。"""
     attr_str = "".join(f' {k}="{escape(v)}"' for k, v in attrs.items())
-    # 值只转义 XML 必需字符（& < >）；引号按原文保留，兼容 aapt 的引号包裹语法
-    body = escape(text)
+    body = escape(text)                      # & < >
+    body = body.replace("'", "\\'")          # 单引号必须转义 (aapt 规则)
+    body = body.replace('"', '\\"')          # 双引号一并转义，避免歧义
+    # 修正非法的反斜杠转义（如 \a \b \f \v）：后跟非合法转义符时加倍
+    # 合法: \n \t \' \" \\ \uXXXX
+    body = re.sub(r'\\(?![nt\'"u\\])', r'\\\\', body)
     return f"    <string{attr_str}>{body}</string>"
 
 
