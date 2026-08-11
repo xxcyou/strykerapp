@@ -751,7 +751,7 @@ public class LocalAdapter extends RecyclerView.Adapter<LocalAdapter.ViewHolder> 
                     exploits[i] = core.getExploits().get(i).getTitle();
                 }
                 AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                builder.setTitle("Select Exploit");
+                builder.setTitle(R.string.title_select_exploit);
                 builder.setItems(exploits, (dialogInterface, i) -> {
                     Exploit exploit = core.getExploits().get(i);
                     exploit.setIp(device.getIp());
