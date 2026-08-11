@@ -80,6 +80,7 @@ jobs:
           fi
 
       - name: Generate temporary signing keystore (JDK 17 keytool)
+        id: tempkeystore
         if: steps.signing.outputs.keystore_decoded != 'true'
         run: |
           PASS="$(openssl rand -hex 12)"
@@ -98,10 +99,10 @@ jobs:
       - name: Export signing properties
         run: |
           {
-            echo "STRYKER_RELEASE_STORE_FILE=${{ steps.signing.outputs.keystore_file }}"
-            echo "STRYKER_RELEASE_STORE_PASSWORD=${{ steps.signing.outputs.storepass || secrets.STRYKER_KEYSTORE_PASSWORD }}"
-            echo "STRYKER_RELEASE_KEY_ALIAS=${{ steps.signing.outputs.keyalias || secrets.STRYKER_KEY_ALIAS }}"
-            echo "STRYKER_RELEASE_KEY_PASSWORD=${{ steps.signing.outputs.keypass || secrets.STRYKER_KEY_PASSWORD }}"
+            echo "STRYKER_RELEASE_STORE_FILE=${{ steps.tempkeystore.outputs.keystore_file || steps.signing.outputs.keystore_file }}"
+            echo "STRYKER_RELEASE_STORE_PASSWORD=${{ steps.tempkeystore.outputs.storepass || secrets.STRYKER_KEYSTORE_PASSWORD }}"
+            echo "STRYKER_RELEASE_KEY_ALIAS=${{ steps.tempkeystore.outputs.keyalias || secrets.STRYKER_KEY_ALIAS }}"
+            echo "STRYKER_RELEASE_KEY_PASSWORD=${{ steps.tempkeystore.outputs.keypass || secrets.STRYKER_KEY_PASSWORD }}"
           } >> "$GITHUB_ENV"
 
       - name: Grant execute permission for gradlew
