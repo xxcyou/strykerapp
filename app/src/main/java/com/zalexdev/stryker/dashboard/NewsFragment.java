@@ -30,7 +30,7 @@ public class NewsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        receiver.setTitle(R.string.title_news);
+        receiver.setTitle(getString(R.string.title_news));
         Activity activity = getActivity();
         Context context = getContext();
         RecyclerView list = view.findViewById(R.id.news_list);
