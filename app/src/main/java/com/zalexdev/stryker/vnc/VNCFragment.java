@@ -260,7 +260,7 @@ public class VNCFragment extends Fragment {
 
     private void wireInstall() {
         install.setOnClickListener(v -> new MaterialAlertDialogBuilder(context)
-                .setTitle("VNC installer")
+                .setTitle(R.string.title_vnc_installer)
                 .setMessage(core.isRootless()
                         ? "This will install XFCE + x11vnc inside the VM. ~600 MB download."
                         : "This will install XFCE + x11vnc into the chroot. ~600 MB download.")
@@ -567,7 +567,7 @@ public class VNCFragment extends Fragment {
 
     private void wireUninstall() {
         uninstall.setOnClickListener(v -> new MaterialAlertDialogBuilder(context)
-                .setTitle("Uninstall VNC?")
+                .setTitle(R.string.title_uninstall_vnc)
                 .setMessage("Removes XFCE + x11vnc from the chroot. Disk space is freed; you can reinstall later.")
                 .setNegativeButton(android.R.string.cancel, (di, i) -> {})
                 .setPositiveButton("Uninstall", (di, i) -> {
